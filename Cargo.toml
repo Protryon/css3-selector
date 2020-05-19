@@ -1,0 +1,13 @@
+[package]
+name = "css3-selector"
+version = "0.1.0"
+authors = ["Protryon <max.bruce12@gmail.com>"]
+edition = "2018"
+license = "MIT"
+repository = "https://github.com/Protryon/css3-selector"
+description = "A CSS3 selector parser"
+keywords = [ "css", "css3", "selector", "parser", "dom" ]
+
+[dependencies]
+lazy_static = "1.4.0"
+regex = "1.3"
