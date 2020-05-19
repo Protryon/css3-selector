@@ -1,8 +1,6 @@
 /// https://www.w3.org/TR/2018/REC-selectors-3-20181106/#grammar
 
-pub trait Node<'a> {
-
-}
+pub trait Node<'a> {}
 
 pub struct SelectorsGroup<'a> {
     pub selectors: Vec<Selector<'a>>,
@@ -12,7 +10,7 @@ impl<'a> Node<'a> for SelectorsGroup<'a> {}
 
 pub struct Selector<'a> {
     pub base: SelectorSequence<'a>,
-    pub modifiers: Vec<(Combinator, SelectorSequence<'a>)>
+    pub modifiers: Vec<(Combinator, SelectorSequence<'a>)>,
 }
 
 impl<'a> Node<'a> for Selector<'a> {}
@@ -21,7 +19,7 @@ pub enum Combinator {
     Plus,
     Greater,
     Tilde,
-    None
+    None,
 }
 
 pub struct SelectorSequence<'a> {

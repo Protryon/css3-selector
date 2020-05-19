@@ -60,7 +60,11 @@ pub struct LexerError<'a> {
 
 impl<'a> fmt::Display for LexerError<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "failed to lex @ {}:{} ('{}'): {}", self.span.start, self.span.stop, self.span.value, self.message)
+        write!(
+            f,
+            "failed to lex @ {}:{} ('{}'): {}",
+            self.span.start, self.span.stop, self.span.value, self.message
+        )
     }
 }
 
@@ -75,12 +79,10 @@ lazy_static! {
 }
 
 fn match_ident<'a>(src: &'a str) -> Option<&'a str> {
-    IDENT.find(src).map(|ident|
-        {
-            assert_eq!(ident.start(), 0);
-            &src[..ident.end()]
-        }
-    )
+    IDENT.find(src).map(|ident| {
+        assert_eq!(ident.start(), 0);
+        &src[..ident.end()]
+    })
 }
 
 fn match_token_raw<'a>(src: &mut &'a str) -> Result<Token<'a>, String> {
@@ -126,15 +128,13 @@ fn match_token_raw<'a>(src: &mut &'a str) -> Result<Token<'a>, String> {
         if src.starts_with("%") {
             *src = &src[1..];
             Ok(Token::PERCENTAGE(span))
-        } else if let Some(ident) = IDENT.find(src).map(|ident|
-                {
-                    assert_eq!(ident.start(), 0);
-                    let span = &src[..ident.end()];
-                    *src = &src[ident.end()..];
-                    span
-                }
-            ) {
-                Ok(Token::DIMENSION(span, ident))
+        } else if let Some(ident) = IDENT.find(src).map(|ident| {
+            assert_eq!(ident.start(), 0);
+            let span = &src[..ident.end()];
+            *src = &src[ident.end()..];
+            span
+        }) {
+            Ok(Token::DIMENSION(span, ident))
         } else {
             Ok(Token::NUM(span))
         }
@@ -232,7 +232,6 @@ fn match_token_raw<'a>(src: &mut &'a str) -> Result<Token<'a>, String> {
     }
 }
 
-
 fn match_token<'a>(index: usize, src: &mut &'a str) -> Result<TokenSpan<'a>, LexerError<'a>> {
     let mut new_src = *src;
     let result = match_token_raw(&mut new_src);
@@ -245,8 +244,8 @@ fn match_token<'a>(index: usize, src: &mut &'a str) -> Result<TokenSpan<'a>, Lex
         Ok(token) => {
             *src = new_src;
             Ok((span, token))
-        },
-        Err(message) => Err(LexerError::<'a> { span, message })
+        }
+        Err(message) => Err(LexerError::<'a> { span, message }),
     }
 }
 
@@ -260,16 +259,13 @@ impl<'a> Lexer<'a> {
                 Ok((span, token)) => {
                     index += span.stop - span.start;
                     tokens.push((span, token));
-                },
+                }
                 Err(e) => {
                     return Err(e);
-                },
+                }
             }
         }
-        Ok(Lexer::<'a> {
-            src,
-            tokens,
-        })
+        Ok(Lexer::<'a> { src, tokens })
     }
 }
 

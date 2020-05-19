@@ -11,7 +11,11 @@ pub struct ParseError<'a> {
 
 impl<'a> fmt::Display for ParseError<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "failed to parse @ {} ('{}'): {}", self.index, self.token, self.message)
+        write!(
+            f,
+            "failed to parse @ {} ('{}'): {}",
+            self.index, self.token, self.message
+        )
     }
 }
 
@@ -35,9 +39,7 @@ pub fn parse<'a>(mut tokens: &[TokenSpan<'a>]) -> Result<SelectorsGroup<'a>, Par
 
 impl<'a> Parse<'a, SelectorsGroup<'a>> for Parser {
     fn parse(tokens: &mut &[TokenSpan<'a>]) -> Result<SelectorsGroup<'a>, ParseError<'a>> {
-        let mut selectors: Vec<Selector<'a>> = vec![
-            Parser::parse(tokens)?,
-        ];
+        let mut selectors: Vec<Selector<'a>> = vec![Parser::parse(tokens)?];
         while let Some((_, Token::COMMA)) = tokens.get(0) {
             *tokens = &tokens[1..];
             while let Some((_, Token::S)) = tokens.get(0) {
@@ -46,9 +48,7 @@ impl<'a> Parse<'a, SelectorsGroup<'a>> for Parser {
             selectors.push(Parser::parse(tokens)?);
         }
 
-        Ok(SelectorsGroup::<'a> {
-            selectors,
-        })
+        Ok(SelectorsGroup::<'a> { selectors })
     }
 }
 
@@ -58,18 +58,10 @@ impl<'a> Parse<'a, Selector<'a>> for Parser {
         let mut modifiers: Vec<(Combinator, SelectorSequence<'a>)> = vec![];
         loop {
             let combinator = match tokens.get(0) {
-                Some((_, Token::PLUS)) => {
-                    Combinator::Plus
-                },
-                Some((_, Token::GREATER)) => {
-                    Combinator::Greater
-                },
-                Some((_, Token::TILDE)) => {
-                    Combinator::Tilde
-                },
-                Some((_, Token::S)) => {
-                    Combinator::None
-                },
+                Some((_, Token::PLUS)) => Combinator::Plus,
+                Some((_, Token::GREATER)) => Combinator::Greater,
+                Some((_, Token::TILDE)) => Combinator::Tilde,
+                Some((_, Token::S)) => Combinator::None,
                 _ => break,
             };
             *tokens = &tokens[1..];
@@ -80,10 +72,7 @@ impl<'a> Parse<'a, Selector<'a>> for Parser {
             modifiers.push((combinator, modifier));
         }
 
-        Ok(Selector::<'a> {
-            base,
-            modifiers,
-        })
+        Ok(Selector::<'a> { base, modifiers })
     }
 }
 
@@ -96,11 +85,11 @@ impl<'a> Parse<'a, SelectorSequence<'a>> for Parser {
             match Parser::parse(tokens) {
                 Ok(attribute_selector) => {
                     attribute_selectors.push(attribute_selector);
-                },
+                }
                 Err(e) => {
                     last_error = e;
                     break;
-                },
+                }
             }
         }
         if type_selector.is_none() && attribute_selectors.len() == 0 {
@@ -108,7 +97,7 @@ impl<'a> Parse<'a, SelectorSequence<'a>> for Parser {
                 index: tokens.get(0).map(|x| x.0.start).unwrap_or(0),
                 token: tokens.get(0).map(|x| x.0.value).unwrap_or_default(),
                 message: format!("expected at least 1 attribute selector to accompany the type selector, 0 found\n{:?}", last_error),
-            })
+            });
         }
         Ok(SelectorSequence::<'a> {
             type_selector,
@@ -123,11 +112,11 @@ impl<'a> Parse<'a, AttributeSelector<'a>> for Parser {
             Some((_, Token::HASH(hash))) => {
                 *tokens = &tokens[1..];
                 Ok(AttributeSelector::Hash(hash))
-            },
+            }
             Some((_, Token::DOT(class))) => {
                 *tokens = &tokens[1..];
                 Ok(AttributeSelector::Class(class))
-            },
+            }
             Some((_, Token::LBRACK)) => Ok(AttributeSelector::Attribute(Parser::parse(tokens)?)),
             Some((_, Token::COLON)) => Ok(AttributeSelector::Psuedo(Parser::parse(tokens)?)),
             Some((_, Token::NOT)) => Ok(AttributeSelector::Negation(Parser::parse(tokens)?)),
@@ -140,7 +129,7 @@ impl<'a> Parse<'a, AttributeSelector<'a>> for Parser {
                 index: 0,
                 token: "",
                 message: "expected a '.', '#', '[', ':', or 'NOT', EOF found".to_string(),
-            })
+            }),
         }
     }
 }
@@ -151,38 +140,46 @@ impl<'a> Parse<'a, Namespace<'a>> for Parser {
             Some((_, Token::IDENT(ident))) => {
                 *tokens = &tokens[1..];
                 Namespace::<'a>::Ident(ident)
-            },
+            }
             Some((_, Token::STAR)) => {
                 *tokens = &tokens[1..];
                 Namespace::<'a>::All
-            },
-            Some((span, _token)) => return Err(ParseError::<'a> {
-                index: span.start,
-                token: span.value,
-                message: "expected a '[', none found".to_string(),
-            }),
-            None => return Err(ParseError::<'a> {
-                index: 0,
-                token: "",
-                message: "expected a ']', EOF found".to_string(),
-            })
+            }
+            Some((span, _token)) => {
+                return Err(ParseError::<'a> {
+                    index: span.start,
+                    token: span.value,
+                    message: "expected a '[', none found".to_string(),
+                })
+            }
+            None => {
+                return Err(ParseError::<'a> {
+                    index: 0,
+                    token: "",
+                    message: "expected a ']', EOF found".to_string(),
+                })
+            }
         };
         match tokens.get(0) {
             Some((_, Token::PIPE)) => {
                 *tokens = &tokens[1..];
-            },
-            Some((span, _token)) => return Err(ParseError::<'a> {
-                index: span.start,
-                token: span.value,
-                message: "expected a '[', none found".to_string(),
-            }),
-            None => return Err(ParseError::<'a> {
-                index: 0,
-                token: "",
-                message: "expected a ']', EOF found".to_string(),
-            })
+            }
+            Some((span, _token)) => {
+                return Err(ParseError::<'a> {
+                    index: span.start,
+                    token: span.value,
+                    message: "expected a '[', none found".to_string(),
+                })
+            }
+            None => {
+                return Err(ParseError::<'a> {
+                    index: 0,
+                    token: "",
+                    message: "expected a ']', EOF found".to_string(),
+                })
+            }
         };
-        
+
         Ok(matched)
     }
 }
@@ -197,14 +194,14 @@ impl<'a> Parse<'a, TypeSelector<'a>> for Parser {
                     namespace,
                     element_name: Some(ident),
                 })
-            },
+            }
             Some((_, Token::STAR)) => {
                 *tokens = &tokens[1..];
                 Ok(TypeSelector::<'a> {
                     namespace,
                     element_name: None,
                 })
-            },
+            }
             Some((span, _token)) => Err(ParseError::<'a> {
                 index: span.start,
                 token: span.value,
@@ -214,7 +211,7 @@ impl<'a> Parse<'a, TypeSelector<'a>> for Parser {
                 index: 0,
                 token: "",
                 message: "expected a '*' or ident, EOF found".to_string(),
-            })
+            }),
         }
     }
 }
@@ -224,17 +221,21 @@ impl<'a> Parse<'a, Attribute<'a>> for Parser {
         match tokens.get(0) {
             Some((_, Token::LBRACK)) => {
                 *tokens = &tokens[1..];
-            },
-            Some((span, _token)) => return Err(ParseError::<'a> {
-                index: span.start,
-                token: span.value,
-                message: "expected a '[', none found".to_string(),
-            }),
-            None => return Err(ParseError::<'a> {
-                index: 0,
-                token: "",
-                message: "expected a '[', EOF found".to_string(),
-            })
+            }
+            Some((span, _token)) => {
+                return Err(ParseError::<'a> {
+                    index: span.start,
+                    token: span.value,
+                    message: "expected a '[', none found".to_string(),
+                })
+            }
+            None => {
+                return Err(ParseError::<'a> {
+                    index: 0,
+                    token: "",
+                    message: "expected a '[', EOF found".to_string(),
+                })
+            }
         }
         while let Some((_, Token::S)) = tokens.get(0) {
             *tokens = &tokens[1..];
@@ -244,7 +245,7 @@ impl<'a> Parse<'a, Attribute<'a>> for Parser {
             Some((_, Token::IDENT(ident))) => {
                 *tokens = &tokens[1..];
                 Ok(ident)
-            },
+            }
             Some((span, _token)) => Err(ParseError::<'a> {
                 index: span.start,
                 token: span.value,
@@ -254,7 +255,7 @@ impl<'a> Parse<'a, Attribute<'a>> for Parser {
                 index: 0,
                 token: "",
                 message: "expected an ident, EOF found".to_string(),
-            })
+            }),
         }?;
         while let Some((_, Token::S)) = tokens.get(0) {
             *tokens = &tokens[1..];
@@ -263,27 +264,27 @@ impl<'a> Parse<'a, Attribute<'a>> for Parser {
             Some((_, Token::PREFIXMATCH)) => {
                 *tokens = &tokens[1..];
                 Ok(Matcher::Prefix)
-            },
+            }
             Some((_, Token::SUFFIXMATCH)) => {
                 *tokens = &tokens[1..];
                 Ok(Matcher::Suffix)
-            },
+            }
             Some((_, Token::SUBSTRINGMATCH)) => {
                 *tokens = &tokens[1..];
                 Ok(Matcher::Substring)
-            },
+            }
             Some((_, Token::EQ)) => {
                 *tokens = &tokens[1..];
                 Ok(Matcher::Equal)
-            },
+            }
             Some((_, Token::INCLUDES)) => {
                 *tokens = &tokens[1..];
                 Ok(Matcher::Includes)
-            },
+            }
             Some((_, Token::DASHMATCH)) => {
                 *tokens = &tokens[1..];
                 Ok(Matcher::Dash)
-            },
+            }
             Some((_, Token::RBRACK)) => {
                 *tokens = &tokens[1..];
                 return Ok(Attribute::<'a> {
@@ -291,8 +292,8 @@ impl<'a> Parse<'a, Attribute<'a>> for Parser {
                     name,
                     matcher: None,
                     value: None,
-                })
-            },
+                });
+            }
             Some((span, _token)) => Err(ParseError::<'a> {
                 index: span.start,
                 token: span.value,
@@ -302,7 +303,7 @@ impl<'a> Parse<'a, Attribute<'a>> for Parser {
                 index: 0,
                 token: "",
                 message: "expected a '^=', '$=', '*=', '=', '~=', or '|=', EOF found".to_string(),
-            })
+            }),
         }?;
         while let Some((_, Token::S)) = tokens.get(0) {
             *tokens = &tokens[1..];
@@ -311,17 +312,21 @@ impl<'a> Parse<'a, Attribute<'a>> for Parser {
             Some((_, Token::IDENT(value))) | Some((_, Token::STRING(value))) => {
                 *tokens = &tokens[1..];
                 Some(*value)
-            },
-            Some((span, _token)) => return Err(ParseError::<'a> {
-                index: span.start,
-                token: span.value,
-                message: "expected an ident or string, none found".to_string(),
-            }),
-            None => return Err(ParseError::<'a> {
-                index: 0,
-                token: "",
-                message: "expected an ident or string, EOF found".to_string(),
-            })
+            }
+            Some((span, _token)) => {
+                return Err(ParseError::<'a> {
+                    index: span.start,
+                    token: span.value,
+                    message: "expected an ident or string, none found".to_string(),
+                })
+            }
+            None => {
+                return Err(ParseError::<'a> {
+                    index: 0,
+                    token: "",
+                    message: "expected an ident or string, EOF found".to_string(),
+                })
+            }
         };
         while let Some((_, Token::S)) = tokens.get(0) {
             *tokens = &tokens[1..];
@@ -329,17 +334,21 @@ impl<'a> Parse<'a, Attribute<'a>> for Parser {
         match tokens.get(0) {
             Some((_, Token::RBRACK)) => {
                 *tokens = &tokens[1..];
-            },
-            Some((span, _token)) => return Err(ParseError::<'a> {
-                index: span.start,
-                token: span.value,
-                message: "expected a ']', none found".to_string(),
-            }),
-            None => return Err(ParseError::<'a> {
-                index: 0,
-                token: "",
-                message: "expected a ']', EOF found".to_string(),
-            })
+            }
+            Some((span, _token)) => {
+                return Err(ParseError::<'a> {
+                    index: span.start,
+                    token: span.value,
+                    message: "expected a ']', none found".to_string(),
+                })
+            }
+            None => {
+                return Err(ParseError::<'a> {
+                    index: 0,
+                    token: "",
+                    message: "expected a ']', EOF found".to_string(),
+                })
+            }
         }
         Ok(Attribute::<'a> {
             namespace,
@@ -352,27 +361,31 @@ impl<'a> Parse<'a, Attribute<'a>> for Parser {
 
 impl<'a> Parse<'a, Psuedo<'a>> for Parser {
     fn parse(tokens: &mut &[TokenSpan<'a>]) -> Result<Psuedo<'a>, ParseError<'a>> {
-         match tokens.get(0) {
+        match tokens.get(0) {
             Some((_, Token::COLON)) => {
                 *tokens = &tokens[1..];
-            },
-            Some((span, _token)) => return Err(ParseError::<'a> {
-                index: span.start,
-                token: span.value,
-                message: "expected a ':', none found".to_string(),
-            }),
-            None => return Err(ParseError::<'a> {
-                index: 0,
-                token: "",
-                message: "expected a ':', EOF found".to_string(),
-            })
+            }
+            Some((span, _token)) => {
+                return Err(ParseError::<'a> {
+                    index: span.start,
+                    token: span.value,
+                    message: "expected a ':', none found".to_string(),
+                })
+            }
+            None => {
+                return Err(ParseError::<'a> {
+                    index: 0,
+                    token: "",
+                    message: "expected a ':', EOF found".to_string(),
+                })
+            }
         };
         let is_class_type = match tokens.get(0) {
             Some((_, Token::COLON)) => {
                 *tokens = &tokens[1..];
                 false
-            },
-            _ => true
+            }
+            _ => true,
         };
         match tokens.get(0) {
             Some((_, Token::IDENT(ident))) => {
@@ -382,7 +395,7 @@ impl<'a> Parse<'a, Psuedo<'a>> for Parser {
                     name: ident,
                     arg: None,
                 })
-            },
+            }
             Some((_, Token::FUNCTION(ident))) => {
                 *tokens = &tokens[1..];
                 while let Some((_, Token::S)) = tokens.get(0) {
@@ -392,34 +405,42 @@ impl<'a> Parse<'a, Psuedo<'a>> for Parser {
                 match tokens.get(0) {
                     Some((_, Token::RPAREN)) => {
                         *tokens = &tokens[1..];
-                    },
-                    Some((span, _token)) => return Err(ParseError::<'a> {
-                        index: span.start,
-                        token: span.value,
-                        message: "expected a ')', none found".to_string(),
-                    }),
-                    None => return Err(ParseError::<'a> {
-                        index: 0,
-                        token: "",
-                        message: "expected a ')', EOF found".to_string(),
-                    })
+                    }
+                    Some((span, _token)) => {
+                        return Err(ParseError::<'a> {
+                            index: span.start,
+                            token: span.value,
+                            message: "expected a ')', none found".to_string(),
+                        })
+                    }
+                    None => {
+                        return Err(ParseError::<'a> {
+                            index: 0,
+                            token: "",
+                            message: "expected a ')', EOF found".to_string(),
+                        })
+                    }
                 };
                 Ok(Psuedo::<'a> {
                     is_class_type,
                     name: ident,
                     arg: Some(arg),
                 })
-            },
-            Some((span, _token)) => return Err(ParseError::<'a> {
-                index: span.start,
-                token: span.value,
-                message: "expected an ident or function, none found".to_string(),
-            }),
-            None => return Err(ParseError::<'a> {
-                index: 0,
-                token: "",
-                message: "expected an ident or function, EOF found".to_string(),
-            })
+            }
+            Some((span, _token)) => {
+                return Err(ParseError::<'a> {
+                    index: span.start,
+                    token: span.value,
+                    message: "expected an ident or function, none found".to_string(),
+                })
+            }
+            None => {
+                return Err(ParseError::<'a> {
+                    index: 0,
+                    token: "",
+                    message: "expected an ident or function, EOF found".to_string(),
+                })
+            }
         }
     }
 }
@@ -447,37 +468,43 @@ impl<'a> Parse<'a, ExpressionItem<'a>> for Parser {
             Some((_, Token::PLUS)) => {
                 *tokens = &tokens[1..];
                 Ok(ExpressionItem::<'a>::Plus)
-            },
+            }
             Some((_, Token::SUB)) => {
                 *tokens = &tokens[1..];
                 Ok(ExpressionItem::<'a>::Minus)
-            },
+            }
             Some((_, Token::DIMENSION(dimension, unit))) => {
                 *tokens = &tokens[1..];
                 Ok(ExpressionItem::<'a>::Dimension(dimension, unit))
-            },
+            }
             Some((_, Token::NUM(number))) => {
                 *tokens = &tokens[1..];
                 Ok(ExpressionItem::<'a>::Number(number))
-            },
+            }
             Some((_, Token::STRING(string))) => {
                 *tokens = &tokens[1..];
                 Ok(ExpressionItem::<'a>::Str(string))
-            },
+            }
             Some((_, Token::IDENT(ident))) => {
                 *tokens = &tokens[1..];
                 Ok(ExpressionItem::<'a>::Ident(ident))
-            },
-            Some((span, _token)) => return Err(ParseError::<'a> {
-                index: span.start,
-                token: span.value,
-                message: "expected a '+', '-', dimension, number, string, or ident, none found".to_string(),
-            }),
-            None => return Err(ParseError::<'a> {
-                index: 0,
-                token: "",
-                message: "expected a '+', '-', dimension, number, string, or ident, EOF found".to_string(),
-            })
+            }
+            Some((span, _token)) => {
+                return Err(ParseError::<'a> {
+                    index: span.start,
+                    token: span.value,
+                    message: "expected a '+', '-', dimension, number, string, or ident, none found"
+                        .to_string(),
+                })
+            }
+            None => {
+                return Err(ParseError::<'a> {
+                    index: 0,
+                    token: "",
+                    message: "expected a '+', '-', dimension, number, string, or ident, EOF found"
+                        .to_string(),
+                })
+            }
         }
     }
 }
@@ -487,17 +514,21 @@ impl<'a> Parse<'a, Negation<'a>> for Parser {
         match tokens.get(0) {
             Some((_, Token::NOT)) => {
                 *tokens = &tokens[1..];
-            },
-            Some((span, _token)) => return Err(ParseError::<'a> {
-                index: span.start,
-                token: span.value,
-                message: "expected a ':not(', none found".to_string(),
-            }),
-            None => return Err(ParseError::<'a> {
-                index: 0,
-                token: "",
-                message: "expected a ':not(', EOF found".to_string(),
-            })
+            }
+            Some((span, _token)) => {
+                return Err(ParseError::<'a> {
+                    index: span.start,
+                    token: span.value,
+                    message: "expected a ':not(', none found".to_string(),
+                })
+            }
+            None => {
+                return Err(ParseError::<'a> {
+                    index: 0,
+                    token: "",
+                    message: "expected a ':not(', EOF found".to_string(),
+                })
+            }
         }
         while let Some((_, Token::S)) = tokens.get(0) {
             *tokens = &tokens[1..];
@@ -505,15 +536,15 @@ impl<'a> Parse<'a, Negation<'a>> for Parser {
         let result = match tokens.get(0) {
             Some((_, Token::IDENT(_))) | Some((_, Token::STAR)) => {
                 Ok(Negation::TypeSelector(Parser::parse(tokens)?))
-            },
+            }
             Some((_, Token::HASH(hash))) => {
                 *tokens = &tokens[1..];
                 Ok(Negation::Hash(hash))
-            },
+            }
             Some((_, Token::DOT(class))) => {
                 *tokens = &tokens[1..];
                 Ok(Negation::Class(class))
-            },
+            }
             Some((_, Token::LBRACK)) => Ok(Negation::Attribute(Parser::parse(tokens)?)),
             Some((_, Token::COLON)) => Ok(Negation::Psuedo(Parser::parse(tokens)?)),
             Some((span, _token)) => Err(ParseError::<'a> {
@@ -525,7 +556,7 @@ impl<'a> Parse<'a, Negation<'a>> for Parser {
                 index: 0,
                 token: "",
                 message: "expected a '.', '#', '[', ident, '*', or ':', EOF found".to_string(),
-            })
+            }),
         }?;
         while let Some((_, Token::S)) = tokens.get(0) {
             *tokens = &tokens[1..];
@@ -533,28 +564,31 @@ impl<'a> Parse<'a, Negation<'a>> for Parser {
         match tokens.get(0) {
             Some((_, Token::RPAREN)) => {
                 *tokens = &tokens[1..];
-            },
-            Some((span, _token)) => return Err(ParseError::<'a> {
-                index: span.start,
-                token: span.value,
-                message: "expected a ')', none found".to_string(),
-            }),
-            None => return Err(ParseError::<'a> {
-                index: 0,
-                token: "",
-                message: "expected a ')', EOF found".to_string(),
-            })
+            }
+            Some((span, _token)) => {
+                return Err(ParseError::<'a> {
+                    index: span.start,
+                    token: span.value,
+                    message: "expected a ')', none found".to_string(),
+                })
+            }
+            None => {
+                return Err(ParseError::<'a> {
+                    index: 0,
+                    token: "",
+                    message: "expected a ')', EOF found".to_string(),
+                })
+            }
         }
         Ok(result)
     }
 }
 
-
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::PASS_SELECTORS;
     use crate::token::Lexer;
+    use crate::PASS_SELECTORS;
 
     #[test]
     fn pass_tests() {

@@ -1,9 +1,9 @@
 #[macro_use]
 extern crate lazy_static;
 
-pub mod token;
 pub mod ast;
 pub mod parser;
+pub mod token;
 
 #[cfg(test)]
 pub static PASS_SELECTORS: &[&str] = &[
