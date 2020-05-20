@@ -1,4 +1,5 @@
 use regex::Regex;
+use std::error::Error;
 use std::fmt;
 
 /// https://www.w3.org/TR/2018/REC-selectors-3-20181106/#lex
@@ -67,6 +68,8 @@ impl<'a> fmt::Display for LexerError<'a> {
         )
     }
 }
+
+impl<'a> Error for LexerError<'a> {}
 
 lazy_static! {
     static ref S: Regex = Regex::new(r"(?i)^[ \t\r\n\f]+").unwrap();

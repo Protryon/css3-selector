@@ -1,5 +1,6 @@
 use crate::ast::*;
 use crate::token::*;
+use std::error::Error;
 use std::fmt;
 
 #[derive(Debug)]
@@ -18,6 +19,8 @@ impl<'a> fmt::Display for ParseError<'a> {
         )
     }
 }
+
+impl<'a> Error for ParseError<'a> {}
 
 struct Parser;
 
