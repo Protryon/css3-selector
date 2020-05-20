@@ -74,7 +74,7 @@ impl<'a> Error for LexerError<'a> {}
 lazy_static! {
     static ref S: Regex = Regex::new(r"(?i)^[ \t\r\n\f]+").unwrap();
     static ref IDENT: Regex = Regex::new(r"(?i)^[-]?(?:[_a-z]|[^\x00-\x7F]|\\[0-9a-f]{1,6}(\r\n|[ \n\r\t\f])?|\\[^\n\r\f0-9a-f])(?:[_a-z0-9-]|[^\x00-\x7F]|\\[0-9a-f]{1,6}(\r\n|[ \n\r\t\f])?|\\[^\n\r\f0-9a-f])*").unwrap();
-    static ref STRING: Regex = Regex::new(r#"(?i)^(?:"([^\n\r\f\\"]|\\\n|\r\n|\r|\f|[^\x00-\x7F]|\\[0-9a-f]{1,6}(\r\n|[ \n\r\t\f])?|\\[^\n\r\f0-9a-f])*")|(?:'([^\n\r\f\\"]|\\\n|\r\n|\r|\f|[^\x00-\x7F]|\\[0-9a-f]{1,6}(\r\n|[ \n\r\t\f])?|\\[^\n\r\f0-9a-f])*')"#).unwrap();
+    static ref STRING: Regex = Regex::new(r#"(?i)^(?:"((?:[^\n\r\f\\"]|\\\n|\r\n|\r|\f|[^\x00-\x7F]|\\[0-9a-f]{1,6}(?:\r\n|[ \n\r\t\f])?|\\[^\n\r\f0-9a-f])*)")|(?:'((?:[^\n\r\f\\"]|\\\n|\r\n|\r|\f|[^\x00-\x7F]|\\[0-9a-f]{1,6}(\r\n|[ \n\r\t\f])?|\\[^\n\r\f0-9a-f])*)')"#).unwrap();
     static ref NUMBER: Regex = Regex::new(r"(?i)^(?:[0-9]+|[0-9]*\.[0-9]+)").unwrap();
     static ref PLUS_GREATER_COMMA_TILDE: Regex = Regex::new(r"(?i)^[ \t\r\n\f]*(\+|>|,|~)").unwrap();
     static ref NOT: Regex = Regex::new(r#"(?i)^:(?:n|\\0{0,4}(4e|6e)(\r\n|[ \t\r\n\f])?|\\n)(?:o|\\0{0,4}(4f|6f)(\r\n|[ \t\r\n\f])?|\\o)(?:t|\\0{0,4}(54|74)(\r\n|[ \t\r\n\f])?|\\t)\("#).unwrap();
